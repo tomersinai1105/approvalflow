@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - "**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Check repository hygiene
+        run: |
+          test -f .gitignore
+          test -f LICENSE
+          test -f .env.example
+          test -f dapr/components/secrets.example.json
+
+          if git ls-files | grep -E '(^|/)\.env$|(^|/)secrets\.json$'; then
+            echo "Secret files must not be tracked by Git."
+            exit 1
+          fi
+
+      - name: Compile Python files
+        run: |
+          python -m compileall app scripts
+
+      - name: Run automated tests
+        run: |
+          pytest -q
+
+      - name: Validate Docker Compose configuration
+        run: |
+          cp .env.example .env
+          cp dapr/components/secrets.example.json dapr/components/secrets.json
+          docker compose config
