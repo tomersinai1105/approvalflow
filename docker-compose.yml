@@ -1,0 +1,214 @@
+services:
+  redis:
+    image: redis:7-alpine
+
+  api-gateway:
+    build: .
+    command: uvicorn app.gateway.api_gateway:app --host 0.0.0.0 --port 8000
+    environment:
+      DAPR_BASE_URL: http://api-gateway-dapr:3500
+      DAPR_PUBSUB_NAME: pubsub
+      DAPR_STATE_STORE_NAME: statestore
+      DAPR_SECRET_STORE_NAME: local-secret-store
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+
+  api-gateway-dapr:
+    image: daprio/daprd:1.14.4
+    command:
+      [
+        "./daprd",
+        "--app-id", "api-gateway",
+        "--app-port", "8000",
+        "--app-channel-address", "api-gateway",
+        "--dapr-http-port", "3500",
+        "--resources-path", "/components",
+        "--config", "/components/config.yaml"
+      ]
+    volumes:
+      - ./dapr/components:/components
+    depends_on:
+      - api-gateway
+      - redis
+
+  invoice-service:
+    build: .
+    command: uvicorn app.microservices.invoice_service.invoice_api:app --host 0.0.0.0 --port 8001
+    environment:
+      DAPR_BASE_URL: http://invoice-service-dapr:3500
+      DAPR_PUBSUB_NAME: pubsub
+      DAPR_STATE_STORE_NAME: statestore
+      DAPR_SECRET_STORE_NAME: local-secret-store
+    depends_on:
+      - redis
+
+  invoice-service-dapr:
+    image: daprio/daprd:1.14.4
+    command:
+      [
+        "./daprd",
+        "--app-id", "invoice-service",
+        "--app-port", "8001",
+        "--app-channel-address", "invoice-service",
+        "--dapr-http-port", "3500",
+        "--resources-path", "/components",
+        "--config", "/components/config.yaml"
+      ]
+    volumes:
+      - ./dapr/components:/components
+    depends_on:
+      - invoice-service
+      - redis
+
+  workflow-service:
+    build: .
+    command: uvicorn app.microservices.workflow_service.workflow_api:app --host 0.0.0.0 --port 8002
+    environment:
+      DAPR_BASE_URL: http://workflow-service-dapr:3500
+      DAPR_PUBSUB_NAME: pubsub
+      DAPR_STATE_STORE_NAME: statestore
+      DAPR_SECRET_STORE_NAME: local-secret-store
+      POLICY_PATH: config/policy.md
+      SAMPLE_INVOICES_PATH: config/sample-invoices.json
+      AUTONOMY_CEILING: "250.0"
+      AUTONOMY_CONFIDENCE: "0.80"
+      DECISION_SERVICE_APP_ID: decision-service
+      PAYMENT_SERVICE_APP_ID: payment-service
+      AUDIT_SERVICE_APP_ID: audit-service
+    depends_on:
+      - redis
+
+  workflow-service-dapr:
+    image: daprio/daprd:1.14.4
+    command:
+      [
+        "./daprd",
+        "--app-id", "workflow-service",
+        "--app-port", "8002",
+        "--app-channel-address", "workflow-service",
+        "--dapr-http-port", "3500",
+        "--resources-path", "/components",
+        "--config", "/components/config.yaml"
+      ]
+    volumes:
+      - ./dapr/components:/components
+    depends_on:
+      - workflow-service
+      - redis
+
+  decision-service:
+    build: .
+    command: uvicorn app.microservices.decision_service.decision_api:app --host 0.0.0.0 --port 8003
+    environment:
+      DAPR_BASE_URL: http://decision-service-dapr:3500
+      DAPR_STATE_STORE_NAME: statestore
+      DAPR_SECRET_STORE_NAME: local-secret-store
+      AUTONOMY_CEILING: "250.0"
+      AUTONOMY_CONFIDENCE: "0.80"
+    depends_on:
+      - redis
+
+  decision-service-dapr:
+    image: daprio/daprd:1.14.4
+    command:
+      [
+        "./daprd",
+        "--app-id", "decision-service",
+        "--app-port", "8003",
+        "--app-channel-address", "decision-service",
+        "--dapr-http-port", "3500",
+        "--resources-path", "/components",
+        "--config", "/components/config.yaml"
+      ]
+    volumes:
+      - ./dapr/components:/components
+    depends_on:
+      - decision-service
+      - redis
+
+  payment-service:
+    build: .
+    command: uvicorn app.microservices.payment_service.payment_api:app --host 0.0.0.0 --port 8004
+    environment:
+      DAPR_BASE_URL: http://payment-service-dapr:3500
+      DAPR_STATE_STORE_NAME: statestore
+      DAPR_SECRET_STORE_NAME: local-secret-store
+      SAMPLE_INVOICES_PATH: config/sample-invoices.json
+    depends_on:
+      - redis
+
+  payment-service-dapr:
+    image: daprio/daprd:1.14.4
+    command:
+      [
+        "./daprd",
+        "--app-id", "payment-service",
+        "--app-port", "8004",
+        "--app-channel-address", "payment-service",
+        "--dapr-http-port", "3500",
+        "--resources-path", "/components",
+        "--config", "/components/config.yaml"
+      ]
+    volumes:
+      - ./dapr/components:/components
+    depends_on:
+      - payment-service
+      - redis
+
+  audit-service:
+    build: .
+    command: uvicorn app.microservices.audit_service.audit_api:app --host 0.0.0.0 --port 8005
+    environment:
+      DAPR_BASE_URL: http://audit-service-dapr:3500
+      DAPR_STATE_STORE_NAME: statestore
+      DAPR_SECRET_STORE_NAME: local-secret-store
+    depends_on:
+      - redis
+
+  audit-service-dapr:
+    image: daprio/daprd:1.14.4
+    command:
+      [
+        "./daprd",
+        "--app-id", "audit-service",
+        "--app-port", "8005",
+        "--app-channel-address", "audit-service",
+        "--dapr-http-port", "3500",
+        "--resources-path", "/components",
+        "--config", "/components/config.yaml"
+      ]
+    volumes:
+      - ./dapr/components:/components
+    depends_on:
+      - audit-service
+      - redis
+
+  query-service:
+    build: .
+    command: uvicorn app.microservices.query_service.query_api:app --host 0.0.0.0 --port 8006
+    environment:
+      DAPR_BASE_URL: http://query-service-dapr:3500
+      DAPR_STATE_STORE_NAME: statestore
+      DAPR_SECRET_STORE_NAME: local-secret-store
+    depends_on:
+      - redis
+
+  query-service-dapr:
+    image: daprio/daprd:1.14.4
+    command:
+      [
+        "./daprd",
+        "--app-id", "query-service",
+        "--app-port", "8006",
+        "--app-channel-address", "query-service",
+        "--dapr-http-port", "3500",
+        "--resources-path", "/components",
+        "--config", "/components/config.yaml"
+      ]
+    volumes:
+      - ./dapr/components:/components
+    depends_on:
+      - query-service
+      - redis

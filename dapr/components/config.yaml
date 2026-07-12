@@ -1,0 +1,15 @@
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: approvalflow-config
+
+spec:
+  tracing:
+    samplingRate: "1"
+
+  metric:
+    enabled: true
+
+  logging:
+    apiLogging:
+      enabled: true

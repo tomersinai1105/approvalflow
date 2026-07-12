@@ -1,0 +1,42 @@
+# Environment variables and local secrets
+.env
+.env.local
+.env.*
+!.env.example
+
+# Secret files
+secrets.json
+**/secrets.json
+!secrets.example.json
+!**/secrets.example.json
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Logs
+*.log
+logs/
+
+# Test / coverage cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Docker / local runtime artifacts
+*.pid
+*.sock

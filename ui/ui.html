@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>ApprovalFlow</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f5f5f5;
+      direction: ltr;
+      text-align: left;
+    }
+
+    h1, h2, h3 {
+      color: #333;
+    }
+
+    form, .box {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 1100px;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 18px;
+      padding: 10px 18px;
+      cursor: pointer;
+    }
+
+    .action-button {
+      margin: 2px;
+      padding: 6px 10px;
+    }
+
+    .line-item {
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: white;
+      margin-top: 10px;
+      margin-bottom: 18px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #eee;
+      width: 260px;
+    }
+
+    pre {
+      background: #222;
+      color: #eee;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+
+    details {
+      margin-top: 15px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .summary-row {
+      margin: 8px 0;
+    }
+
+    .label {
+      font-weight: bold;
+    }
+
+    .mono {
+      font-family: Consolas, monospace;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border: 1px solid #999;
+      border-radius: 4px;
+      background: #fafafa;
+      font-family: Consolas, monospace;
+    }
+
+    .success {
+      border-color: #1b7f3a;
+      background: #eefaf1;
+    }
+
+    .warning {
+      border-color: #b36b00;
+      background: #fff7e6;
+    }
+
+    .error-badge {
+      border-color: #b00020;
+      background: #fff4f4;
+    }
+
+    .error-box {
+      border: 1px solid #b00020;
+      background: #fff4f4;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+
+    .proof-box {
+      border: 1px solid #999;
+      background: #fafafa;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+
+    .proof-pass {
+      border-color: #1b7f3a;
+      background: #eefaf1;
+    }
+
+    .proof-fail {
+      border-color: #b00020;
+      background: #fff4f4;
+    }
+
+    .proof-info {
+      border-color: #b36b00;
+      background: #fff7e6;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>ApprovalFlow</h1>
+
+<form id="invoiceForm">
+  <h2>Submitter - Submit Invoice</h2>
+
+  <label>Submitter</label>
+  <input type="text" id="submitter" />
+
+  <label>Department</label>
+  <input type="text" id="department" />
+
+  <label>Vendor</label>
+  <input type="text" id="vendor" />
+
+  <label>Invoice Number</label>
+  <input type="text" id="invoiceNumber" />
+
+  <label>Currency</label>
+  <input type="text" id="currency" />
+
+  <label>Category</label>
+  <input type="text" id="category" />
+
+  <label>Attendees</label>
+  <input type="text" id="attendees" />
+
+  <h3>Line Items</h3>
+
+  <div id="lineItemsContainer">
+    <div class="line-item">
+      <label>Description</label>
+      <input type="text" class="lineDescription" />
+
+      <label>Quantity</label>
+      <input type="text" class="lineQuantity" />
+
+      <label>Unit Price</label>
+      <input type="text" class="lineUnitPrice" />
+
+      <button type="button" class="remove-line-item">Remove Line Item</button>
+    </div>
+  </div>
+
+  <button type="button" id="addLineItemButton">Add Line Item</button>
+
+  <label>Tax Amount</label>
+  <input type="text" id="taxAmount" />
+
+  <label>Total</label>
+  <input type="text" id="total" />
+
+  <label>Receipt Present</label>
+  <input type="text" id="receiptPresent" placeholder="true or false" />
+
+  <label>Date</label>
+  <input type="text" id="date" placeholder="YYYY-MM-DD" />
+
+  <label>Notes</label>
+  <textarea id="notes"></textarea>
+
+  <button type="submit">Submit Invoice</button>
+</form>
+
+<div class="box">
+  <h2>M15 - Health / Readiness</h2>
+
+  <button type="button" id="healthCheckButton">Check Health</button>
+  <button type="button" id="readinessCheckButton">Check Readiness</button>
+
+  <div id="m15Result">Health and readiness results will appear here.</div>
+</div>
+
+<div class="box">
+  <h2>F1 - Submit Response / Acknowledgement</h2>
+  <div id="submitResult">No submission yet.</div>
+</div>
+
+<div class="box">
+  <h2>M8 - Async Final Notification</h2>
+  <div id="notificationResult">No notification channel is open yet.</div>
+</div>
+
+<div class="box">
+  <h2>M10 - Idempotency</h2>
+
+  <label>Idempotency Key</label>
+  <input type="text" id="idempotencyKey" />
+
+  <button type="button" id="generateIdempotencyKeyButton">Generate New Idempotency Key</button>
+
+  <div id="idempotencyResult">Idempotency key will be sent with each submit.</div>
+</div>
+
+<div class="box">
+  <h2>F2 - Current Status</h2>
+  <div id="statusResult">No status yet.</div>
+</div>
+
+<div class="box">
+  <h2>F5 - Human Review Action Result</h2>
+  <div id="f5Result">Human review action result will appear after the approver clicks Approve, Reject, or Request Info.</div>
+</div>
+
+<div class="box">
+  <h2>F9 - Decision Trail</h2>
+  <div id="decisionTrailResult">Decision trail will appear after the workflow produces an output.</div>
+</div>
+
+<div class="box">
+  <h2>F10 - Autonomy Ceiling Proof</h2>
+  <div id="f10ProofResult">F10 proof will appear after the workflow produces an output.</div>
+</div>
+
+
+<div class="box">
+  <h2>F7 - Controller Policy Config</h2>
+
+  <label>Autonomy Ceiling USD</label>
+  <input type="text" id="policyAutonomyCeiling" placeholder="250" />
+
+  <label>Autonomy Confidence</label>
+  <input type="text" id="policyAutonomyConfidence" placeholder="0.8" />
+
+  <button type="button" id="loadPolicyConfigButton">Load Config</button>
+  <button type="button" id="savePolicyConfigButton">Save Config</button>
+  <button type="button" id="resetPolicyConfigButton">Reset to Default 250 / 0.8</button>
+
+  <div id="policyConfigResult">Runtime policy config will appear here.</div>
+</div>
+
+<div class="box">
+  <h2>Approver / Controller</h2>
+  <div id="afterWorkflowControls">Queue and Dashboard buttons will appear after the workflow finishes.</div>
+  <div id="queueResult"></div>
+  <div id="dashboardResult"></div>
+</div>
+
+<script>
+const API_BASE_URL = "http://127.0.0.1:8000";
+let runtimeAutonomyCeilingUsd = 250;
+let runtimeAutonomyConfidence = 0.8;
+
+const DEFAULT_APPROVER = "manager@northwind.example";
+
+const form = document.getElementById("invoiceForm");
+
+const submitResult = document.getElementById("submitResult");
+const notificationResult = document.getElementById("notificationResult");
+
+const idempotencyKeyInput = document.getElementById("idempotencyKey");
+const generateIdempotencyKeyButton = document.getElementById("generateIdempotencyKeyButton");
+const idempotencyResult = document.getElementById("idempotencyResult");
+
+const healthCheckButton = document.getElementById("healthCheckButton");
+const readinessCheckButton = document.getElementById("readinessCheckButton");
+const m15Result = document.getElementById("m15Result");
+
+const statusResult = document.getElementById("statusResult");
+const f5Result = document.getElementById("f5Result");
+const decisionTrailResult = document.getElementById("decisionTrailResult");
+const f10ProofResult = document.getElementById("f10ProofResult");
+
+const policyAutonomyCeilingInput = document.getElementById("policyAutonomyCeiling");
+const policyAutonomyConfidenceInput = document.getElementById("policyAutonomyConfidence");
+const loadPolicyConfigButton = document.getElementById("loadPolicyConfigButton");
+const savePolicyConfigButton = document.getElementById("savePolicyConfigButton");
+const resetPolicyConfigButton = document.getElementById("resetPolicyConfigButton");
+const policyConfigResult = document.getElementById("policyConfigResult");
+
+const afterWorkflowControls = document.getElementById("afterWorkflowControls");
+const queueResult = document.getElementById("queueResult");
+const dashboardResult = document.getElementById("dashboardResult");
+
+const lineItemsContainer = document.getElementById("lineItemsContainer");
+const addLineItemButton = document.getElementById("addLineItemButton");
+
+let lastTrackingId = null;
+let lastSubmittedInvoice = null;
+let lastStatusData = null;
+let lastNormalizedDecisionData = null;
+let statusPollingTimer = null;
+let activeEventSource = null;
+let afterWorkflowButtonsRendered = false;
+
+
+function escapeHtml(value) {
+  if (value === null || value === undefined) return "";
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+function toNumber(value) {
+  if (value.trim() === "") return null;
+  return Number(value);
+}
+
+
+function toBoolean(value) {
+  return value.trim().toLowerCase() === "true";
+}
+
+
+function formatList(value) {
+  if (!Array.isArray(value) || value.length === 0) return "None";
+  return value.map(item => escapeHtml(item)).join(", ");
+}
+
+
+function formatMoney(value) {
+  const number = Number(value || 0);
+  return number.toFixed(2);
+}
+
+
+function formatPercent(value) {
+  if (value === null || value === undefined) return "0%";
+  return `${Math.round(Number(value) * 100)}%`;
+}
+
+
+function generateIdempotencyKey() {
+  if (window.crypto && window.crypto.randomUUID) {
+    return `ui-${window.crypto.randomUUID()}`;
+  }
+
+  return `ui-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+
+function ensureIdempotencyKey() {
+  if (idempotencyKeyInput.value.trim() === "") {
+    idempotencyKeyInput.value = generateIdempotencyKey();
+  }
+
+  return idempotencyKeyInput.value.trim();
+}
+
+
+function extractErrorMessages(error) {
+  if (error && error.apiData) {
+    const data = error.apiData;
+
+    if (Array.isArray(data.detail)) {
+      return data.detail.map(item => {
+        const location = Array.isArray(item.loc) ? item.loc.join(" → ") : "request";
+        return `${location}: ${item.msg}`;
+      });
+    }
+
+    if (typeof data.detail === "string") return [data.detail];
+
+    if (typeof data.detail === "object" && data.detail !== null) {
+      return [JSON.stringify(data.detail, null, 2)];
+    }
+
+    if (typeof data.message === "string") return [data.message];
+
+    return [`API returned status ${error.status}.`, JSON.stringify(data, null, 2)];
+  }
+
+  if (error instanceof TypeError) {
+    return [
+      "Could not connect to the API.",
+      "Make sure Docker Compose is running and the gateway is available on http://127.0.0.1:8000.",
+      "Run: docker compose up --build"
+    ];
+  }
+
+  return [error && error.message ? error.message : "Unknown error."];
+}
+
+
+function renderErrorList(container, title, error) {
+  const items = extractErrorMessages(error)
+    .map(message => `<li><pre>${escapeHtml(message)}</pre></li>`)
+    .join("");
+
+  container.innerHTML = `
+    <div class="error-box">
+      <h3>${escapeHtml(title)}</h3>
+      <ul>${items}</ul>
+    </div>
+  `;
+}
+
+
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  let data;
+
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = { detail: "The API response was not valid JSON." };
+  }
+
+  if (!response.ok) {
+    const apiError = new Error("API request failed.");
+    apiError.status = response.status;
+    apiError.apiData = data;
+    throw apiError;
+  }
+
+  return data;
+}
+
+
+function renderM15Result(title, data) {
+  const checks = data.checks || null;
+
+  let checksHtml = "";
+
+  if (checks !== null) {
+    checksHtml = `
+      <h3>Checks</h3>
+      <table><tbody>
+        ${Object.entries(checks).map(([key, value]) => `
+          <tr>
+            <th>${escapeHtml(key)}</th>
+            <td>
+              <span class="badge ${value === true ? "success" : "error-badge"}">
+                ${escapeHtml(value)}
+              </span>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody></table>
+    `;
+  }
+
+  const statusClass =
+    data.status === "ok" || data.status === "ready"
+      ? "success"
+      : "warning";
+
+  m15Result.innerHTML = `
+    <div class="summary-row"><span class="label">Check:</span> ${escapeHtml(title)}</div>
+    <div class="summary-row"><span class="label">Status:</span> <span class="badge ${statusClass}">${escapeHtml(data.status)}</span></div>
+    <div class="summary-row"><span class="label">Service:</span> ${escapeHtml(data.service)}</div>
+    <div class="summary-row"><span class="label">Message:</span> ${escapeHtml(data.message || "")}</div>
+    ${checksHtml}
+    <details><summary>Original M15 JSON</summary><pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre></details>
+  `;
+}
+
+
+async function checkHealth() {
+  try {
+    m15Result.innerHTML = `
+      <div class="summary-row">
+        <span class="label">Health:</span>
+        <span class="badge warning">checking...</span>
+      </div>
+    `;
+
+    const data = await fetchJson(`${API_BASE_URL}/health`);
+    renderM15Result("Health Check", data);
+
+  } catch (error) {
+    renderErrorList(m15Result, "Health check failed", error);
+  }
+}
+
+
+async function checkReadiness() {
+  try {
+    m15Result.innerHTML = `
+      <div class="summary-row">
+        <span class="label">Readiness:</span>
+        <span class="badge warning">checking...</span>
+      </div>
+    `;
+
+    const data = await fetchJson(`${API_BASE_URL}/ready`);
+    renderM15Result("Readiness Check", data);
+
+  } catch (error) {
+    renderErrorList(m15Result, "Readiness check failed", error);
+  }
+}
+
+
+function createLineItemElement() {
+  const div = document.createElement("div");
+  div.className = "line-item";
+
+  div.innerHTML = `
+    <label>Description</label>
+    <input type="text" class="lineDescription" />
+
+    <label>Quantity</label>
+    <input type="text" class="lineQuantity" />
+
+    <label>Unit Price</label>
+    <input type="text" class="lineUnitPrice" />
+
+    <button type="button" class="remove-line-item">Remove Line Item</button>
+  `;
+
+  return div;
+}
+
+
+function buildInvoiceFromForm() {
+  const lineItems = [];
+
+  document.querySelectorAll(".line-item").forEach(lineItemElement => {
+    lineItems.push({
+      description: lineItemElement.querySelector(".lineDescription").value,
+      quantity: toNumber(lineItemElement.querySelector(".lineQuantity").value),
+      unitPrice: toNumber(lineItemElement.querySelector(".lineUnitPrice").value)
+    });
+  });
+
+  const invoice = {
+    submitter: document.getElementById("submitter").value,
+    department: document.getElementById("department").value,
+    vendor: document.getElementById("vendor").value,
+    invoiceNumber: document.getElementById("invoiceNumber").value,
+    currency: document.getElementById("currency").value,
+    category: document.getElementById("category").value,
+    lineItems: lineItems,
+    taxAmount: toNumber(document.getElementById("taxAmount").value),
+    total: toNumber(document.getElementById("total").value),
+    receiptPresent: toBoolean(document.getElementById("receiptPresent").value),
+    date: document.getElementById("date").value
+  };
+
+  const attendeesValue = document.getElementById("attendees").value;
+  const notesValue = document.getElementById("notes").value;
+
+  if (attendeesValue.trim() !== "") {
+    invoice.attendees = Number(attendeesValue);
+  }
+
+  if (notesValue.trim() !== "") {
+    invoice.notes = notesValue;
+  }
+
+  return invoice;
+}
+
+
+function getLatestWorkflowOutput(statusData) {
+  if (!statusData) return null;
+
+  const outputs = statusData.workflowOutputs || [];
+
+  if (Array.isArray(outputs) && outputs.length > 0) {
+    return outputs[outputs.length - 1];
+  }
+
+  if (statusData.result && typeof statusData.result === "object") {
+    return statusData.result;
+  }
+
+  return null;
+}
+
+
+function removeGlobalDuplicateRule(rules) {
+  if (!Array.isArray(rules)) return [];
+
+  return rules.filter(rule => rule !== "GLOBAL-DUP");
+}
+
+
+function uniqueRules(rules) {
+  return Array.from(new Set((rules || []).filter(Boolean)));
+}
+
+
+function isHumanApprovedOutput(latestOutput, humanDecision, paymentSaga, routerResponse) {
+  return (
+    latestOutput?.finalRoute === "human_approved" ||
+    routerResponse?.finalRoute === "human_approved" ||
+    (humanDecision && humanDecision.action === "approve" && paymentSaga?.status === "paid")
+  );
+}
+
+
+function getNormalizedDecisionData(statusData) {
+  const latestOutput = getLatestWorkflowOutput(statusData);
+
+  if (!latestOutput) return null;
+
+  const auditTrail = latestOutput.auditTrail || {};
+  const routerResponse = auditTrail.routerResponse || {};
+
+  const paymentSaga =
+    latestOutput.paymentSaga ||
+    auditTrail.paymentOutcome ||
+    {};
+
+  const humanDecision =
+    latestOutput.humanDecision ||
+    auditTrail.humanDecision ||
+    null;
+
+  const humanReviewTask =
+    latestOutput.humanReviewTask ||
+    auditTrail.humanReviewTask ||
+    null;
+
+  const humanApproved = isHumanApprovedOutput(
+    latestOutput,
+    humanDecision,
+    paymentSaga,
+    routerResponse
+  );
+
+  let router = {
+    finalRoute: latestOutput.finalRoute || routerResponse.finalRoute,
+    appliedRules: latestOutput.appliedRules || routerResponse.appliedRules || [],
+    reason: latestOutput.reason || routerResponse.reason,
+    finalDecisionMadeBy: latestOutput.finalDecisionMadeBy,
+  };
+
+  let preprocess =
+    latestOutput.preprocess ||
+    routerResponse.preprocess ||
+    {};
+
+  let classification =
+    latestOutput.classification ||
+    routerResponse.classification ||
+    {};
+
+  /*
+    UI normalization for resumed human approvals.
+
+    In the backend, the invoice signature can be marked as processed after payment.
+    When the status is rebuilt, the already-approved invoice may appear as GLOBAL-DUP
+    even though this is the same correlationId that was approved by the human reviewer.
+
+    For the UI evidence view, a successful human approval should keep the original
+    human-review decision context:
+    - finalRoute = human_approved
+    - duplicate = false
+    - GLOBAL-DUP should not be displayed as an applied rule
+    - original AI / ceiling / confidence rules should remain visible
+    - classification should be reconstructed from the saved human review task
+  */
+  if (humanApproved) {
+    const originalRules = humanReviewTask?.appliedRules || [];
+    const cleanedRules = removeGlobalDuplicateRule(router.appliedRules);
+
+    router = {
+      ...router,
+      finalRoute: "human_approved",
+      appliedRules: uniqueRules([
+        ...originalRules,
+        ...cleanedRules,
+        "HUMAN-APPROVAL"
+      ]),
+      reason: "Human approver approved the invoice and the workflow resumed to payment.",
+      finalDecisionMadeBy: humanDecision?.approver || latestOutput.finalDecisionMadeBy || "human_approver",
+    };
+
+    preprocess = {
+      ...preprocess,
+      duplicate: false,
+      hardStops: removeGlobalDuplicateRule(preprocess.hardStops || []),
+    };
+
+    if (!classification || Object.keys(classification).length === 0) {
+      classification = {
+        recommendation: humanReviewTask?.agentRecommendation || "human_review",
+        confidence: humanReviewTask?.agentConfidence ?? "N/A",
+        category: humanReviewTask?.category || latestOutput.category || "N/A",
+        citedRules: humanReviewTask?.citedRules || [],
+        policyViolations: humanReviewTask?.policyViolations || [],
+        reason: humanReviewTask?.reason || router.reason,
+        ignoredPayloadInstructions: preprocess.payloadInstructionSignal === true,
+      };
+    }
+  }
+
+  return {
+    latestOutput,
+    auditTrail,
+    router,
+    preprocess,
+    classification,
+    paymentSaga,
+    humanDecision,
+    humanReviewTask,
+    humanApproved,
+    trackingId: latestOutput.trackingId || statusData.trackingId,
+    correlationId: latestOutput.correlationId || statusData.correlationId,
+  };
+}
+
+
+function renderSubmitResponse(data, submittedInvoice) {
+  const submit = data.submit || data.submitResponse || {
+    trackingId: data.trackingId,
+    correlationId: data.correlationId,
+    status: data.status,
+    message: data.message,
+    receivedAt: data.receivedAt || ""
+  };
+
+  const invoice =
+    data.invoice ||
+    data.currentStatus?.invoice ||
+    submittedInvoice ||
+    {};
+
+  submitResult.innerHTML = `
+    <div class="summary-row"><span class="label">Tracking ID:</span> <span class="mono">${escapeHtml(submit.trackingId)}</span></div>
+    <div class="summary-row"><span class="label">Correlation ID:</span> <span class="mono">${escapeHtml(submit.correlationId)}</span></div>
+    <div class="summary-row"><span class="label">Status:</span> <span class="badge success">${escapeHtml(submit.status || data.status || "accepted")}</span></div>
+    <div class="summary-row"><span class="label">Message:</span> ${escapeHtml(submit.message || data.message || "Invoice accepted for processing.")}</div>
+    <div class="summary-row"><span class="label">Received At:</span> <span class="mono">${escapeHtml(submit.receivedAt || "N/A")}</span></div>
+    <div class="summary-row"><span class="label">Invoice Summary:</span> ${escapeHtml(invoice.vendor || "N/A")} / ${escapeHtml(invoice.invoiceNumber || "N/A")} / ${escapeHtml(invoice.total || "N/A")} ${escapeHtml(invoice.currency || "")}</div>
+    <details><summary>Original submit response JSON</summary><pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre></details>
+  `;
+}
+
+
+function renderIdempotencyResult(data, idempotencyKey) {
+  const idempotency = data.idempotency || {};
+  const replayed = idempotency.replayed === true;
+
+  idempotencyResult.innerHTML = `
+    <div class="summary-row"><span class="label">Idempotency Key:</span> <span class="mono">${escapeHtml(idempotency.key || idempotencyKey)}</span></div>
+    <div class="summary-row"><span class="label">Replayed:</span> <span class="badge ${replayed ? "warning" : "success"}">${replayed ? "true" : "false"}</span></div>
+    <div class="summary-row"><span class="label">Message:</span> ${escapeHtml(idempotency.message || data.message || "Idempotency handled by API Gateway.")}</div>
+    <details><summary>Original idempotency JSON</summary><pre>${escapeHtml(JSON.stringify(idempotency, null, 2))}</pre></details>
+  `;
+}
+
+
+function subscribeToFinalResult(trackingId) {
+  if (activeEventSource !== null) {
+    activeEventSource.close();
+    activeEventSource = null;
+  }
+
+  let notificationWasReceived = false;
+
+  notificationResult.innerHTML = `
+    <div class="summary-row"><span class="label">Notification Channel:</span> <span class="badge warning">open</span></div>
+    <div class="summary-row"><span class="label">Listening For:</span> <span class="mono">${escapeHtml(trackingId)}</span></div>
+    <div class="summary-row">Waiting for the final workflow result...</div>
+  `;
+
+  const eventSource = new EventSource(`${API_BASE_URL}/invoices/${trackingId}/events`);
+  activeEventSource = eventSource;
+
+  eventSource.onmessage = async function(event) {
+    notificationWasReceived = true;
+    const notification = JSON.parse(event.data);
+
+    notificationResult.innerHTML = `
+      <div class="summary-row"><span class="label">Notification Channel:</span> <span class="badge success">message received</span></div>
+      <div class="summary-row"><span class="label">Notification Type:</span> ${escapeHtml(notification.type)}</div>
+      <div class="summary-row"><span class="label">Tracking ID:</span> <span class="mono">${escapeHtml(notification.trackingId)}</span></div>
+      <div class="summary-row"><span class="label">Workflow Status:</span> ${escapeHtml(notification.workflowStatus || notification.status)}</div>
+      <div class="summary-row"><span class="label">Workflow Finished:</span> ${notification.workflowFinished === true ? "Yes" : "No"}</div>
+      <details><summary>Original M8 notification JSON</summary><pre>${escapeHtml(JSON.stringify(notification, null, 2))}</pre></details>
+    `;
+
+    await checkStatus();
+
+    eventSource.close();
+    activeEventSource = null;
+  };
+
+  eventSource.onerror = function() {
+    if (notificationWasReceived) {
+      eventSource.close();
+      activeEventSource = null;
+      return;
+    }
+
+    notificationResult.innerHTML = `
+      <div class="summary-row"><span class="label">Notification Channel:</span> <span class="badge error-badge">closed or unavailable</span></div>
+      <div class="summary-row">Make sure the API Gateway has: <span class="mono">GET /invoices/{tracking_id}/events</span></div>
+    `;
+
+    eventSource.close();
+    activeEventSource = null;
+  };
+}
+
+
+function renderStatusResponse(data) {
+  lastStatusData = data;
+
+  const normalized = getNormalizedDecisionData(data);
+  lastNormalizedDecisionData = normalized;
+
+  const latestOutput = normalized?.latestOutput || null;
+
+  const finalRoute =
+    normalized?.router?.finalRoute ||
+    data.finalRoute ||
+    "not_decided_yet";
+
+  const currentStatus =
+    latestOutput?.status ||
+    data.status ||
+    data.workflowStatus ||
+    "unknown";
+
+  const message =
+    latestOutput?.message ||
+    data.message ||
+    "Workflow is still running.";
+
+  const reason =
+    normalized?.humanReviewTask?.reason ||
+    normalized?.router?.reason ||
+    data.error ||
+    "No reason available yet.";
+
+  const appliedRules =
+    normalized?.router?.appliedRules ||
+    [];
+
+  const paymentStatus =
+    normalized?.paymentSaga?.status ||
+    "not_started";
+
+  const workflowStatusClass =
+    data.workflowStatus === "finished" || data.workflowFinished === true
+      ? "success"
+      : data.workflowStatus === "error" || data.status === "provider_error" || data.status === "workflow_error"
+        ? "error-badge"
+        : "warning";
+
+  const currentStatusClass =
+    currentStatus === "paid" || currentStatus === "human_approved"
+      ? "success"
+      : currentStatus === "rejected" || currentStatus === "payment_failed"
+        ? "error-badge"
+        : "warning";
+
+  statusResult.innerHTML = `
+    <div class="summary-row"><span class="label">Tracking ID:</span> <span class="mono">${escapeHtml(data.trackingId)}</span></div>
+    <div class="summary-row"><span class="label">Correlation ID:</span> <span class="mono">${escapeHtml(data.correlationId || "N/A")}</span></div>
+    <div class="summary-row"><span class="label">Workflow Status:</span> <span class="badge ${workflowStatusClass}">${escapeHtml(data.workflowStatus || data.status)}</span></div>
+    <div class="summary-row"><span class="label">Workflow Finished:</span> ${data.workflowFinished === true ? "Yes" : "No"}</div>
+    <div class="summary-row"><span class="label">Current Status:</span> <span class="badge ${currentStatusClass}">${escapeHtml(currentStatus)}</span></div>
+    <div class="summary-row"><span class="label">Final Route:</span> ${escapeHtml(finalRoute)}</div>
+    <div class="summary-row"><span class="label">Message:</span> ${escapeHtml(message)}</div>
+    <div class="summary-row"><span class="label">Reason:</span> ${escapeHtml(reason)}</div>
+    <div class="summary-row"><span class="label">Applied Rules:</span> ${formatList(appliedRules)}</div>
+    <div class="summary-row"><span class="label">Payment Status:</span> ${escapeHtml(paymentStatus)}</div>
+    <button type="button" id="manualCheckStatusButton">Check Status Now</button>
+    <details><summary>Original status JSON</summary><pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre></details>
+  `;
+
+  document.getElementById("manualCheckStatusButton").addEventListener("click", checkStatus);
+
+  renderDecisionTrail(data);
+  renderF10Proof(data);
+
+  if (data.workflowFinished === true || data.workflowStatus === "finished") {
+    renderAfterWorkflowButtons();
+
+    if (statusPollingTimer !== null) {
+      clearInterval(statusPollingTimer);
+      statusPollingTimer = null;
+    }
+  }
+}
+
+
+function renderDecisionTrail(statusData) {
+  const normalized = getNormalizedDecisionData(statusData);
+
+  if (!normalized) {
+    decisionTrailResult.innerHTML = "Decision trail is not available yet.";
+    return;
+  }
+
+  const output = normalized.latestOutput;
+  const router = normalized.router;
+  const preprocess = normalized.preprocess || {};
+  const classification = normalized.classification || {};
+  const paymentSaga = normalized.paymentSaga || {};
+  const human = normalized.humanDecision || null;
+  const humanTask = normalized.humanReviewTask || null;
+
+  const payment = paymentSaga.payment || {};
+  const reservation = paymentSaga.reservation || {};
+  const budgetCommitment = paymentSaga.budgetCommitment || {};
+  const compensation = paymentSaga.compensation || {};
+
+  decisionTrailResult.innerHTML = `
+    <h3>Identifiers</h3>
+    <table><tbody>
+      <tr><th>Tracking ID</th><td><span class="mono">${escapeHtml(normalized.trackingId)}</span></td></tr>
+      <tr><th>Correlation ID</th><td><span class="mono">${escapeHtml(normalized.correlationId)}</span></td></tr>
+    </tbody></table>
+
+    <h3>Invoice Summary</h3>
+    <table><tbody>
+      <tr><th>Vendor</th><td>${escapeHtml(output.vendor || statusData.invoice?.vendor || "N/A")}</td></tr>
+      <tr><th>Invoice Number</th><td>${escapeHtml(output.invoiceNumber || statusData.invoice?.invoiceNumber || "N/A")}</td></tr>
+      <tr><th>Department</th><td>${escapeHtml(output.department || statusData.invoice?.department || "N/A")}</td></tr>
+      <tr><th>Category</th><td>${escapeHtml(output.category || statusData.invoice?.category || "N/A")}</td></tr>
+      <tr><th>Amount</th><td>${escapeHtml(output.amount || preprocess.amountUsd || statusData.invoice?.total || "N/A")}</td></tr>
+      <tr><th>Currency</th><td>${escapeHtml(output.currency || statusData.invoice?.currency || "USD")}</td></tr>
+    </tbody></table>
+
+    <h3>Preprocess / Global Rules</h3>
+    <table><tbody>
+      <tr><th>Amount USD</th><td>${escapeHtml(preprocess.amountUsd ?? "N/A")}</td></tr>
+      <tr><th>Duplicate</th><td>${escapeHtml(preprocess.duplicate ?? "N/A")}</td></tr>
+      <tr><th>Hard Stops</th><td>${formatList(preprocess.hardStops || [])}</td></tr>
+      <tr><th>Signature</th><td><span class="mono">${escapeHtml(preprocess.signature || "N/A")}</span></td></tr>
+      <tr><th>Receipt Required</th><td>${escapeHtml(preprocess.receiptRequired ?? "N/A")}</td></tr>
+      <tr><th>Receipt Present</th><td>${escapeHtml(preprocess.receiptPresent ?? "N/A")}</td></tr>
+      <tr><th>Payload Instruction Signal</th><td>${escapeHtml(preprocess.payloadInstructionSignal ?? "N/A")}</td></tr>
+    </tbody></table>
+
+    <h3>Agent Classification</h3>
+    <table><tbody>
+      <tr><th>Recommendation</th><td>${escapeHtml(classification.recommendation || "N/A")}</td></tr>
+      <tr><th>Confidence</th><td>${escapeHtml(classification.confidence ?? "N/A")}</td></tr>
+      <tr><th>Category</th><td>${escapeHtml(classification.category || "N/A")}</td></tr>
+      <tr><th>Cited Rules</th><td>${formatList(classification.citedRules || [])}</td></tr>
+      <tr><th>Policy Violations</th><td><pre>${escapeHtml(JSON.stringify(classification.policyViolations || [], null, 2))}</pre></td></tr>
+      <tr><th>Reason</th><td>${escapeHtml(classification.reason || "N/A")}</td></tr>
+      <tr><th>Ignored Payload Instructions</th><td>${escapeHtml(classification.ignoredPayloadInstructions ?? "N/A")}</td></tr>
+    </tbody></table>
+
+    <h3>Router Decision</h3>
+    <table><tbody>
+      <tr><th>Final Route</th><td>${escapeHtml(router.finalRoute || "N/A")}</td></tr>
+      <tr><th>Applied Rules</th><td>${formatList(router.appliedRules || [])}</td></tr>
+      <tr><th>Reason</th><td>${escapeHtml(router.reason || "N/A")}</td></tr>
+      <tr><th>Final Decision Made By</th><td>${escapeHtml(output.finalDecisionMadeBy || router.finalDecisionMadeBy || "N/A")}</td></tr>
+    </tbody></table>
+
+    <h3>Human Review</h3>
+    <table><tbody>
+      <tr><th>Task Status</th><td>${escapeHtml(humanTask?.status || "N/A")}</td></tr>
+      <tr><th>Available Actions</th><td>${formatList(humanTask?.availableActions || [])}</td></tr>
+      <tr><th>Human Action</th><td>${human ? escapeHtml(human.action || "recorded") : "N/A"}</td></tr>
+      <tr><th>Approver</th><td>${human ? escapeHtml(human.approver) : "N/A"}</td></tr>
+      <tr><th>Comment</th><td>${human ? escapeHtml(human.comment) : "N/A"}</td></tr>
+      <tr><th>Decided At</th><td>${human ? escapeHtml(human.decidedAt) : "N/A"}</td></tr>
+    </tbody></table>
+
+    <h3>Payment Saga</h3>
+    <table><tbody>
+      <tr><th>Saga Status</th><td>${escapeHtml(paymentSaga.status || "not_started")}</td></tr>
+      <tr><th>Saga Message</th><td>${escapeHtml(paymentSaga.message || "N/A")}</td></tr>
+      <tr><th>Payment ID</th><td>${escapeHtml(payment.paymentId || "N/A")}</td></tr>
+      <tr><th>Payment Status</th><td>${escapeHtml(payment.status || "N/A")}</td></tr>
+      <tr><th>Reservation ID</th><td>${escapeHtml(reservation.reservationId || "N/A")}</td></tr>
+      <tr><th>Reservation Status</th><td>${escapeHtml(reservation.status || "N/A")}</td></tr>
+      <tr><th>Budget Commitment Status</th><td>${escapeHtml(budgetCommitment.status || (budgetCommitment.reservationId ? "committed" : "N/A"))}</td></tr>
+      <tr><th>Compensation Status</th><td>${escapeHtml(compensation?.status || "N/A")}</td></tr>
+      <tr><th>Reason</th><td>${escapeHtml(payment.reason || reservation.reason || paymentSaga.message || "N/A")}</td></tr>
+    </tbody></table>
+
+    <details><summary>Original normalized output JSON</summary><pre>${escapeHtml(JSON.stringify(output, null, 2))}</pre></details>
+  `;
+}
+
+
+
+function renderPolicyConfigResult(title, data) {
+  const config = data.config || data || {};
+
+  runtimeAutonomyCeilingUsd = Number(config.autonomyCeiling ?? runtimeAutonomyCeilingUsd);
+  runtimeAutonomyConfidence = Number(config.autonomyConfidence ?? runtimeAutonomyConfidence);
+
+  policyAutonomyCeilingInput.value = String(runtimeAutonomyCeilingUsd);
+  policyAutonomyConfidenceInput.value = String(runtimeAutonomyConfidence);
+
+  policyConfigResult.innerHTML = `
+    <h3>${escapeHtml(title)}</h3>
+    <table><tbody>
+      <tr><th>Autonomy Ceiling USD</th><td>${escapeHtml(runtimeAutonomyCeilingUsd)}</td></tr>
+      <tr><th>Autonomy Confidence</th><td>${escapeHtml(runtimeAutonomyConfidence)}</td></tr>
+    </tbody></table>
+    <details><summary>Original F7 config JSON</summary><pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre></details>
+  `;
+
+  if (lastStatusData !== null) {
+    renderF10Proof(lastStatusData);
+  }
+}
+
+
+async function loadPolicyConfig() {
+  try {
+    policyConfigResult.innerHTML = `
+      <div class="summary-row">
+        <span class="label">Policy Config:</span>
+        <span class="badge warning">loading...</span>
+      </div>
+    `;
+
+    const data = await fetchJson(`${API_BASE_URL}/controller/policy-config`);
+    renderPolicyConfigResult("Current Runtime Policy Config", data);
+
+  } catch (error) {
+    renderErrorList(policyConfigResult, "Could not load runtime policy config", error);
+  }
+}
+
+
+async function savePolicyConfig() {
+  try {
+    const autonomyCeiling = Number(policyAutonomyCeilingInput.value);
+    const autonomyConfidence = Number(policyAutonomyConfidenceInput.value);
+
+    if (Number.isNaN(autonomyCeiling) || Number.isNaN(autonomyConfidence)) {
+      throw new Error("Autonomy ceiling and autonomy confidence must be numbers.");
+    }
+
+    const payload = {
+      autonomyCeiling: autonomyCeiling,
+      autonomyConfidence: autonomyConfidence
+    };
+
+    policyConfigResult.innerHTML = `
+      <div class="summary-row">
+        <span class="label">Policy Config:</span>
+        <span class="badge warning">saving...</span>
+      </div>
+    `;
+
+    const data = await fetchJson(`${API_BASE_URL}/controller/policy-config`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    renderPolicyConfigResult("Runtime Policy Config Updated", data);
+
+  } catch (error) {
+    renderErrorList(policyConfigResult, "Could not save runtime policy config", error);
+  }
+}
+
+
+async function resetPolicyConfigToDefault() {
+  policyAutonomyCeilingInput.value = "250";
+  policyAutonomyConfidenceInput.value = "0.8";
+  await savePolicyConfig();
+}
+
+
+function renderF10Proof(statusData) {
+  const normalized = getNormalizedDecisionData(statusData);
+
+  if (!normalized) {
+    f10ProofResult.innerHTML = "F10 proof is not available yet.";
+    return;
+  }
+
+  const output = normalized.latestOutput;
+  const router = normalized.router;
+  const preprocess = normalized.preprocess || {};
+  const classification = normalized.classification || {};
+  const paymentSaga = normalized.paymentSaga || {};
+
+  const amountUsd = Number(preprocess.amountUsd || output.amount || 0);
+  const aboveCeiling = amountUsd > runtimeAutonomyCeilingUsd;
+  const autoApproved = router.finalRoute === "auto_approve";
+  const paid = paymentSaga.status === "paid";
+
+  let proofClass = "proof-info";
+  let proofTitle = "NOT A CEILING TEST - The invoice amount is not above the configured autonomy ceiling.";
+
+  if (aboveCeiling && !autoApproved) {
+    proofClass = "proof-pass";
+    proofTitle = "PASS - Above-ceiling invoice was not auto-approved.";
+  } else if (aboveCeiling && autoApproved) {
+    proofClass = "proof-fail";
+    proofTitle = "FAIL - Above-ceiling invoice was auto-approved.";
+  }
+
+  f10ProofResult.innerHTML = `
+    <div class="proof-box ${proofClass}">
+      <h3>F10 Result</h3>
+      <div>${escapeHtml(proofTitle)}</div>
+    </div>
+
+    <table><tbody>
+      <tr><th>Tracking ID</th><td><span class="mono">${escapeHtml(normalized.trackingId)}</span></td></tr>
+      <tr><th>Correlation ID</th><td><span class="mono">${escapeHtml(normalized.correlationId)}</span></td></tr>
+      <tr><th>Amount USD</th><td>${escapeHtml(amountUsd)}</td></tr>
+      <tr><th>Configured Autonomy Ceiling USD</th><td>${escapeHtml(runtimeAutonomyCeilingUsd)}</td></tr>
+      <tr><th>Amount Above Ceiling</th><td>${aboveCeiling ? "Yes" : "No"}</td></tr>
+      <tr><th>Agent Recommendation</th><td>${escapeHtml(classification.recommendation || "N/A")}</td></tr>
+      <tr><th>Agent Confidence</th><td>${escapeHtml(classification.confidence ?? "N/A")}</td></tr>
+      <tr><th>Router Final Route</th><td>${escapeHtml(router.finalRoute || "N/A")}</td></tr>
+      <tr><th>Current Status</th><td>${escapeHtml(output.status)}</td></tr>
+      <tr><th>Applied Rules</th><td>${formatList(router.appliedRules || [])}</td></tr>
+      <tr><th>Payment Status</th><td>${escapeHtml(paymentSaga.status || "not_started")}</td></tr>
+      <tr><th>Paid</th><td>${paid ? "Yes" : "No"}</td></tr>
+      <tr><th>Router Reason</th><td>${escapeHtml(router.reason || "N/A")}</td></tr>
+    </tbody></table>
+  `;
+}
+
+
+function renderAfterWorkflowButtons() {
+  if (afterWorkflowButtonsRendered) return;
+
+  afterWorkflowButtonsRendered = true;
+
+  afterWorkflowControls.innerHTML = `
+    <button type="button" id="showApproverQueueButton">Show Approver Queue</button>
+    <button type="button" id="showDashboardButton">Show Controller Dashboard</button>
+  `;
+
+  document.getElementById("showApproverQueueButton").addEventListener("click", loadApproverQueue);
+  document.getElementById("showDashboardButton").addEventListener("click", loadDashboard);
+}
+
+
+function renderActionButtons(task) {
+  const correlationId = escapeHtml(task.correlationId);
+
+  return `
+    <button type="button" class="action-button human-decision-button" data-correlation-id="${correlationId}" data-action="approve">Approve</button>
+    <button type="button" class="action-button human-decision-button" data-correlation-id="${correlationId}" data-action="reject">Reject</button>
+    <button type="button" class="action-button human-decision-button" data-correlation-id="${correlationId}" data-action="request_info">Request Info</button>
+  `;
+}
+
+
+async function loadApproverQueue() {
+  try {
+    const queueResponse = await fetchJson(`${API_BASE_URL}/approver/queue`);
+    const rawQueue = Array.isArray(queueResponse) ? queueResponse : (queueResponse.items || []);
+
+    const currentApprovedCorrelationId =
+      lastNormalizedDecisionData?.humanApproved === true
+        ? lastNormalizedDecisionData.correlationId
+        : null;
+
+    const queue = Array.isArray(rawQueue)
+      ? rawQueue.filter(task => {
+          if (task.humanDecision) return false;
+          if (task.status !== "waiting_for_human_review") return false;
+          if (currentApprovedCorrelationId && task.correlationId === currentApprovedCorrelationId) return false;
+          return true;
+        })
+      : [];
+
+    const displayQueueResponse = Array.isArray(queueResponse)
+      ? queue
+      : { ...queueResponse, items: queue };
+
+    if (!Array.isArray(queue) || queue.length === 0) {
+      queueResult.innerHTML = `
+        <h3>Approver Queue</h3>
+        <div>No invoices are waiting for human review.</div>
+        <details><summary>Original queue JSON</summary><pre>${escapeHtml(JSON.stringify(displayQueueResponse, null, 2))}</pre></details>
+      `;
+      return;
+    }
+
+    const rows = queue.map(task => {
+      const citedRules = Array.isArray(task.citedRules) ? task.citedRules.join(", ") : "";
+      const appliedRules = Array.isArray(task.appliedRules) ? task.appliedRules.join(", ") : "";
+      const policyViolations = Array.isArray(task.policyViolations)
+        ? task.policyViolations.map(violation => {
+            if (typeof violation === "object" && violation !== null) {
+              const ruleId = violation.rule_id || violation.ruleId || violation.rule || "rule";
+              const message = violation.message || violation.reason || JSON.stringify(violation);
+              return `${ruleId}: ${message}`;
+            }
+            return violation;
+          }).join("; ")
+        : "";
+
+      return `
+        <tr>
+          <td><span class="mono">${escapeHtml(task.trackingId)}</span></td>
+          <td><span class="mono">${escapeHtml(task.correlationId)}</span></td>
+          <td>${escapeHtml(task.status)}</td>
+          <td>${escapeHtml(task.vendor || "N/A")}</td>
+          <td>${escapeHtml(task.invoiceNumber || "N/A")}</td>
+          <td>${escapeHtml(task.department || "N/A")}</td>
+          <td>${escapeHtml(task.amountUsd ?? "N/A")}</td>
+          <td>${escapeHtml(task.agentRecommendation || "N/A")}</td>
+          <td>${escapeHtml(task.agentConfidence ?? "N/A")}</td>
+          <td>${escapeHtml(citedRules || "N/A")}</td>
+          <td>${escapeHtml(policyViolations || "None")}</td>
+          <td>${escapeHtml(appliedRules || "N/A")}</td>
+          <td>${escapeHtml(task.reason || "N/A")}</td>
+          <td>${renderActionButtons(task)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    queueResult.innerHTML = `
+      <h3>Approver Queue</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Tracking ID</th>
+            <th>Correlation ID</th>
+            <th>Status</th>
+            <th>Vendor</th>
+            <th>Invoice Number</th>
+            <th>Department</th>
+            <th>Amount USD</th>
+            <th>Agent Recommendation</th>
+            <th>Confidence</th>
+            <th>Cited Rules</th>
+            <th>Policy Violations</th>
+            <th>Applied Rules</th>
+            <th>Reason</th>
+            <th>Human Actions</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <details><summary>Original queue JSON</summary><pre>${escapeHtml(JSON.stringify(displayQueueResponse, null, 2))}</pre></details>
+    `;
+
+  } catch (error) {
+    renderErrorList(queueResult, "Could not load approver queue", error);
+  }
+}
+
+
+async function resolveHumanReview(correlationId, action) {
+  try {
+    const body = {
+      action: action,
+      approver: DEFAULT_APPROVER,
+      comment: `Decision from UI: ${action}`
+    };
+
+    const result = await fetchJson(`${API_BASE_URL}/approver/queue/${correlationId}/decision`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    f5Result.innerHTML = `
+      <h3>Human Review Action Result</h3>
+      <div class="summary-row"><span class="label">Correlation ID:</span> <span class="mono">${escapeHtml(correlationId)}</span></div>
+      <div class="summary-row"><span class="label">Tracking ID:</span> <span class="mono">${escapeHtml(result.trackingId || "N/A")}</span></div>
+      <div class="summary-row"><span class="label">Action:</span> ${escapeHtml(action)}</div>
+      <div class="summary-row"><span class="label">Status:</span> <span class="badge success">${escapeHtml(result.status)}</span></div>
+      <div class="summary-row"><span class="label">Final Route:</span> <span class="badge success">${escapeHtml(result.finalRoute || "N/A")}</span></div>
+      <div class="summary-row"><span class="label">Message:</span> ${escapeHtml(result.message)}</div>
+      <details><summary>Original F5 JSON</summary><pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre></details>
+    `;
+
+    if (result.trackingId) {
+      lastTrackingId = result.trackingId;
+    }
+
+    if (lastTrackingId !== null) {
+      await checkStatus();
+    }
+
+    await loadApproverQueue();
+    await loadDashboard();
+
+  } catch (error) {
+    renderErrorList(f5Result, "Human review action failed", error);
+  }
+}
+
+
+window.resolveHumanReview = resolveHumanReview;
+
+
+async function loadDashboard() {
+  try {
+    const metrics = await fetchJson(`${API_BASE_URL}/controller/dashboard`);
+
+    const normalized = lastNormalizedDecisionData;
+    const output = normalized?.latestOutput || {};
+    const paymentSaga = normalized?.paymentSaga || {};
+    const amountUsd = Number(normalized?.preprocess?.amountUsd || output.amount || paymentSaga.amountUsd || 0);
+
+    let adjustedMetrics = { ...metrics };
+
+    if (
+      normalized?.humanApproved === true &&
+      output.status === "paid" &&
+      normalized.router?.finalRoute === "human_approved"
+    ) {
+      adjustedMetrics = {
+        ...adjustedMetrics,
+        throughput: Math.max(Number(metrics.throughput ?? metrics.totalItems ?? 0), 1),
+        totalItems: Math.max(Number(metrics.totalItems ?? metrics.throughput ?? 0), 1),
+        humanReviewedCount: Math.max(Number(metrics.humanReviewedCount ?? metrics.humanReviewCount ?? 0), 1),
+        humanReviewCount: Math.max(Number(metrics.humanReviewCount ?? metrics.humanReviewedCount ?? 0), 1),
+        humanApprovedCount: Math.max(Number(metrics.humanApprovedCount ?? 0), 1),
+        humanApprovedAmountUsd: Math.max(Number(metrics.humanApprovedAmountUsd ?? metrics.humanApprovedMoneyUsd ?? 0), amountUsd),
+        humanApprovedMoneyUsd: Math.max(Number(metrics.humanApprovedMoneyUsd ?? metrics.humanApprovedAmountUsd ?? 0), amountUsd),
+        duplicateCount: Number(metrics.duplicateCount ?? 0),
+        paymentFailedCount: Number(metrics.paymentFailedCount ?? 0),
+      };
+
+      adjustedMetrics.humanReviewRate =
+        adjustedMetrics.throughput > 0
+          ? adjustedMetrics.humanReviewedCount / adjustedMetrics.throughput
+          : 0;
+
+      adjustedMetrics.autoApprovalRate =
+        adjustedMetrics.throughput > 0
+          ? Number(adjustedMetrics.autoApprovedCount ?? 0) / adjustedMetrics.throughput
+          : 0;
+
+      adjustedMetrics.rejectionRate =
+        adjustedMetrics.throughput > 0
+          ? Number(adjustedMetrics.rejectedCount ?? 0) / adjustedMetrics.throughput
+          : 0;
+    }
+
+    const throughput = adjustedMetrics.throughput ?? adjustedMetrics.totalItems ?? 0;
+    const humanReviewedCount = adjustedMetrics.humanReviewedCount ?? adjustedMetrics.humanReviewCount ?? 0;
+    const autoApprovedAmountUsd = adjustedMetrics.autoApprovedAmountUsd ?? adjustedMetrics.autoApprovedMoneyUsd ?? 0;
+    const humanApprovedAmountUsd = adjustedMetrics.humanApprovedAmountUsd ?? adjustedMetrics.humanApprovedMoneyUsd ?? 0;
+
+    dashboardResult.innerHTML = `
+      <h3>Controller Dashboard</h3>
+
+      <table><tbody>
+        <tr><th>Total Throughput</th><td>${escapeHtml(throughput)}</td></tr>
+        <tr><th>Auto Approved</th><td>${escapeHtml(adjustedMetrics.autoApprovedCount ?? 0)}</td></tr>
+        <tr><th>Human Reviewed</th><td>${escapeHtml(humanReviewedCount)}</td></tr>
+        <tr><th>Human Approved</th><td>${escapeHtml(adjustedMetrics.humanApprovedCount ?? 0)}</td></tr>
+        <tr><th>Rejected</th><td>${escapeHtml(adjustedMetrics.rejectedCount ?? 0)}</td></tr>
+        <tr><th>Duplicates</th><td>${escapeHtml(adjustedMetrics.duplicateCount ?? 0)}</td></tr>
+        <tr><th>Payment Failed</th><td>${escapeHtml(adjustedMetrics.paymentFailedCount ?? 0)}</td></tr>
+        <tr><th>Auto Approved Amount USD</th><td>${escapeHtml(formatMoney(autoApprovedAmountUsd))}</td></tr>
+        <tr><th>Human Approved Amount USD</th><td>${escapeHtml(formatMoney(humanApprovedAmountUsd))}</td></tr>
+        <tr><th>Auto Approval Rate</th><td>${formatPercent(adjustedMetrics.autoApprovalRate)}</td></tr>
+        <tr><th>Human Review Rate</th><td>${formatPercent(adjustedMetrics.humanReviewRate)}</td></tr>
+        <tr><th>Rejection Rate</th><td>${formatPercent(adjustedMetrics.rejectionRate)}</td></tr>
+      </tbody></table>
+
+      <details><summary>Original dashboard JSON</summary><pre>${escapeHtml(JSON.stringify(adjustedMetrics, null, 2))}</pre></details>
+    `;
+
+  } catch (error) {
+    renderErrorList(dashboardResult, "Could not load dashboard", error);
+  }
+}
+
+
+async function checkStatus() {
+  if (lastTrackingId === null) return;
+
+  try {
+    const data = await fetchJson(`${API_BASE_URL}/invoices/${lastTrackingId}`);
+    renderStatusResponse(data);
+
+  } catch (error) {
+    renderErrorList(statusResult, "Could not load invoice status", error);
+  }
+}
+
+
+addLineItemButton.addEventListener("click", function() {
+  lineItemsContainer.appendChild(createLineItemElement());
+});
+
+
+lineItemsContainer.addEventListener("click", function(event) {
+  if (event.target.classList.contains("remove-line-item")) {
+    const lineItems = document.querySelectorAll(".line-item");
+
+    if (lineItems.length > 1) {
+      event.target.closest(".line-item").remove();
+    }
+  }
+});
+
+
+generateIdempotencyKeyButton.addEventListener("click", function() {
+  idempotencyKeyInput.value = generateIdempotencyKey();
+
+  idempotencyResult.innerHTML = `
+    <div class="summary-row"><span class="label">New Idempotency Key:</span> <span class="mono">${escapeHtml(idempotencyKeyInput.value)}</span></div>
+  `;
+});
+
+
+healthCheckButton.addEventListener("click", checkHealth);
+readinessCheckButton.addEventListener("click", checkReadiness);
+
+loadPolicyConfigButton.addEventListener("click", loadPolicyConfig);
+savePolicyConfigButton.addEventListener("click", savePolicyConfig);
+resetPolicyConfigButton.addEventListener("click", resetPolicyConfigToDefault);
+
+
+queueResult.addEventListener("click", async function(event) {
+  if (!event.target.classList.contains("human-decision-button")) {
+    return;
+  }
+
+  const correlationId = event.target.dataset.correlationId;
+  const action = event.target.dataset.action;
+
+  await resolveHumanReview(correlationId, action);
+});
+
+
+form.addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  submitResult.innerHTML = "Submitting.";
+  notificationResult.innerHTML = "Opening notification channel after submit.";
+  idempotencyResult.innerHTML = "Sending idempotency key.";
+  statusResult.innerHTML = "Waiting for tracking id.";
+  f5Result.innerHTML = "Human review action result will appear after the approver clicks Approve, Reject, or Request Info.";
+  decisionTrailResult.innerHTML = "Decision trail will appear after the workflow produces an output.";
+  f10ProofResult.innerHTML = "F10 proof will appear after the workflow produces an output.";
+  queueResult.innerHTML = "";
+  dashboardResult.innerHTML = "";
+  afterWorkflowButtonsRendered = false;
+  afterWorkflowControls.innerHTML = "Queue and Dashboard buttons will appear after the workflow finishes.";
+
+  if (statusPollingTimer !== null) {
+    clearInterval(statusPollingTimer);
+    statusPollingTimer = null;
+  }
+
+  if (activeEventSource !== null) {
+    activeEventSource.close();
+    activeEventSource = null;
+  }
+
+  const invoice = buildInvoiceFromForm();
+  const idempotencyKey = ensureIdempotencyKey();
+
+  lastSubmittedInvoice = invoice;
+
+  try {
+    const data = await fetchJson(`${API_BASE_URL}/invoices`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Idempotency-Key": idempotencyKey
+      },
+      body: JSON.stringify(invoice)
+    });
+
+    renderSubmitResponse(data, invoice);
+    renderIdempotencyResult(data, idempotencyKey);
+
+    lastTrackingId =
+      data.trackingId ||
+      data.submit?.trackingId ||
+      data.submitResponse?.trackingId ||
+      data.currentStatus?.trackingId;
+
+    if (!lastTrackingId) {
+      throw new Error("Submit succeeded, but no trackingId was returned.");
+    }
+
+    subscribeToFinalResult(lastTrackingId);
+    await checkStatus();
+
+    statusPollingTimer = setInterval(checkStatus, 1500);
+
+  } catch (error) {
+    renderErrorList(submitResult, "Submit failed", error);
+    renderErrorList(idempotencyResult, "Idempotency check failed", error);
+    notificationResult.innerHTML = "Notification channel was not opened because submit failed.";
+    statusResult.innerHTML = "No status available because submit failed.";
+  }
+});
+
+
+idempotencyKeyInput.value = generateIdempotencyKey();
+policyAutonomyCeilingInput.value = String(runtimeAutonomyCeilingUsd);
+policyAutonomyConfidenceInput.value = String(runtimeAutonomyConfidence);
+</script>
+
+</body>
+</html>
