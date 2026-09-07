@@ -5,13 +5,10 @@
 import os
 from io import StringIO
 
-
-
 import asyncio
 import copy
 import inspect
 import json
-
 
 import sys
 from contextlib import redirect_stderr, redirect_stdout
@@ -434,17 +431,8 @@ def print_result(title: str, result: Any) -> None:
 
 
 
-
-
-
-
-
-
 # Main D5 verification
 async def verify() -> int:
-    
-    
-    
     
     reset_local_runtime_state()
 
@@ -469,8 +457,6 @@ async def verify() -> int:
     print("=" * 45)
 
 
-
-
     # Journey 1: Auto approve — INV-1001
 
     print()
@@ -481,8 +467,6 @@ async def verify() -> int:
     print_result("INV-1001 result:", result_1001)
 
 
-
-
     # Journey 2: Duplicate — INV-1007 after INV-1001
 
     print()
@@ -491,8 +475,6 @@ async def verify() -> int:
     result_1007 = await run_invoice(fixtures["INV-1007"])
     first_results["INV-1007"] = result_1007
     print_result("INV-1007 result:", result_1007)
-
-
 
 
     # Journey 3: Escalate and resume — INV-1003
@@ -513,8 +495,6 @@ async def verify() -> int:
         print_result("INV-1003 after human approval:", approval_1003)
 
 
-
-
     # Journey 4: Payment failure + compensation — INV-1012
 
     print()
@@ -531,8 +511,6 @@ async def verify() -> int:
         )
         approval_results["INV-1012"] = approval_1012
         print_result("INV-1012 after human approval:", approval_1012)
-
-
 
 
     # Run every remaining fixture for anti-cheese/evidence
@@ -552,8 +530,6 @@ async def verify() -> int:
         result = await run_invoice(invoice)
         first_results[fixture_id] = result
         print_result(f"{fixture_id} result:", result)
-
-
 
 
     # D5 checks
