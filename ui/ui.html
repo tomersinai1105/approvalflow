@@ -699,21 +699,7 @@ function getNormalizedDecisionData(statusData) {
     routerResponse.classification ||
     {};
 
-  /*
-    UI normalization for resumed human approvals.
 
-    In the backend, the invoice signature can be marked as processed after payment.
-    When the status is rebuilt, the already-approved invoice may appear as GLOBAL-DUP
-    even though this is the same correlationId that was approved by the human reviewer.
-
-    For the UI evidence view, a successful human approval should keep the original
-    human-review decision context:
-    - finalRoute = human_approved
-    - duplicate = false
-    - GLOBAL-DUP should not be displayed as an applied rule
-    - original AI / ceiling / confidence rules should remain visible
-    - classification should be reconstructed from the saved human review task
-  */
   if (humanApproved) {
     const originalRules = humanReviewTask?.appliedRules || [];
     const cleanedRules = removeGlobalDuplicateRule(router.appliedRules);
