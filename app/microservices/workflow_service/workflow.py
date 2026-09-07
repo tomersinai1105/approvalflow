@@ -47,23 +47,6 @@ from app.common.logger import log_event
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 load_dotenv()
 
 POLICY_PATH = os.getenv("POLICY_PATH", "config/policy.md")
@@ -83,19 +66,10 @@ def load_policy_text() -> str:
 POLICY_TEXT = load_policy_text()
 
 
-
-
 SAMPLE_INVOICES_PATH = os.getenv("SAMPLE_INVOICES_PATH", "config/sample-invoices.json")
-
-
-
-
 
 AUTONOMY_CEILING = float(os.getenv("AUTONOMY_CEILING", "250.0"))
 AUTONOMY_CONFIDENCE = float(os.getenv("AUTONOMY_CONFIDENCE", "0.80"))
-
-
-
 
 CATEGORY_CITED_RULE_IDS = [
     "MEAL-01",
@@ -127,20 +101,11 @@ SOFT_POLICY_RULE_IDS = {
     "MEAL-01",
 }
 
-
-
 WORKFLOW_STATE = {}
 
 HUMAN_REVIEW_TASKS = {}
 
 CLASSIFIER = None
-
-
-
-
-
-
-
 
 
 
@@ -513,41 +478,6 @@ def get_classifier():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Router helper functions.
 
 
@@ -811,33 +741,6 @@ async def router(classifier_response: AgentExecutorResponse, ctx: WorkflowContex
     }
 
     await emit_router_response(ctx, state, raw_classification, router_response)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1422,20 +1325,6 @@ def normalize_human_action(action: str) -> str:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Escalator to human if needed. 
 def resolve_human_review(
     correlation_id: str,
@@ -1730,7 +1619,6 @@ def resolve_human_review(
 
 
 # Main - Local Demo Only.
-
 def load_fixture_by_id(fixture_id: str) -> dict:
 
     with open(SAMPLE_INVOICES_PATH, "r", encoding="utf-8") as file:

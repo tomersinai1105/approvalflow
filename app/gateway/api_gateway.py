@@ -936,17 +936,6 @@ def get_dashboard_alias():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 # GET request: "/audit/{correlation_id}".
 # Try to return the full audit trail of a given correlation ID.
 # Raise error if occurs. 
